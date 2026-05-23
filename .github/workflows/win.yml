@@ -13,36 +13,51 @@ jobs:
       shell: bash
       run: |
         whoami
-        net user runneradmin ${{ secrets.WINRCK }}
+        # 先尝试修改密码，如果密码不符合策略则启用内置管理员
+        net user runneradmin ${{ secrets.WINRCK }} || net user administrator ${{ secrets.WINRCK }}
+        net user
 
     - name: Download and extract frp
       shell: bash
       run: |
-        curl -L -o a.gz https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_windows_amd64.zip
-        unzip a.gz
-        mv frp_* frp
+        curl -L -o frp.zip https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_windows_amd64.zip
+        unzip -q frp.zip
+        # 获取实际解压出来的文件夹名
+        FRP_DIR=$(ls -d frp_* | head -1)
+        mv "$FRP_DIR" frp
+        ls -la frp/
 
     - name: Write frpc config
       shell: bash
       run: |
-        cat > frpc.toml <<'EOF'
+        cat > frp/frpc.toml <<'EOF'
         serverAddr = "47.109.40.213"
         serverPort = 7000
         auth.token = "${{ secrets.RCK }}"
 
         [[proxies]]
-        name = "github_action_win"
+        name = "github_action_win_3389"
         type = "tcp"
         localIP = "127.0.0.1"
         localPort = 3389
         remotePort = 2232
-
-        [proxies.plugin]
-        type = "socks5"
         EOF
+
+    - name: Enable RDP
+      shell: powershell
+      run: |
+        # 开启远程桌面
+        Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
+        # 允许防火墙
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        # 查看 RDP 状态
+        Get-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections"
 
     - name: Run frpc
       shell: bash
       run: |
         cd frp
-        timeout 59m ./frpc -c frpc.toml
+        chmod +x frpc.exe
+        # 使用 timeout 或直接运行（GitHub Actions 会在 job 结束时自动终止）
+        ./frpc.exe -c frpc.toml 2>&1 | tee frpc.log
+      timeout-minutes: 3540 # 约 59 小时，最大限制
