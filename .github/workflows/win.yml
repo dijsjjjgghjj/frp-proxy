@@ -44,4 +44,5 @@ jobs:
     - name: Run frpc
       shell: bash
       run: |
+        cd frp
         timeout 59m ./frpc -c frpc.toml
