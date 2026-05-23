@@ -3,7 +3,6 @@ name: Windows FRP Proxy
 on:
   workflow_dispatch:
 
-
 jobs:
   build:
     runs-on: windows-latest
@@ -43,14 +42,14 @@ jobs:
         remotePort = 2232
         EOF
 
-    - name: 安装中文语言包并设置为显示语言
+    - name: Install Chinese language pack
       shell: powershell
       run: |
-        Write-Host "正在安装中文语言包..." -ForegroundColor Yellow
-
+        Write-Host "Installing Chinese language pack..." -ForegroundColor Yellow
+        
         # 获取当前语言列表
         $langList = Get-WinUserLanguageList
-
+        
         # 检查中文是否已存在
         $chineseExists = $false
         foreach ($lang in $langList) {
@@ -59,49 +58,47 @@ jobs:
                 break
             }
         }
-
+        
         # 如果中文不存在，则添加
         if (-not $chineseExists) {
             $langList.Add("zh-CN")
             Set-WinUserLanguageList $langList -Force
-            Write-Host "✓ 中文语言包已添加" -ForegroundColor Green
+            Write-Host "Chinese language pack added" -ForegroundColor Green
         } else {
-            Write-Host "✓ 中文语言包已存在" -ForegroundColor Green
+            Write-Host "Chinese language pack already exists" -ForegroundColor Green
         }
-
+        
         # 设置系统区域为中文
         Set-WinSystemLocale -SystemLocale "zh-CN"
-        Write-Host "✓ 系统区域已设置为中文" -ForegroundColor Green
-
+        Write-Host "System locale set to Chinese" -ForegroundColor Green
+        
         # 设置显示语言为中文
         Set-WinUILanguageOverride -Language "zh-CN"
-        Write-Host "✓ 显示语言已设置为中文" -ForegroundColor Green
-
-        Write-Host "========================================" -ForegroundColor Yellow
-        Write-Host "中文语言包安装完成！需要注销才能完全生效" -ForegroundColor Green
-        Write-Host "当前语言设置:" -ForegroundColor Cyan
+        Write-Host "Display language set to Chinese" -ForegroundColor Green
+        
+        Write-Host "Chinese language pack installation completed" -ForegroundColor Green
+        Write-Host "Current language settings:" -ForegroundColor Cyan
         Get-WinUserLanguageList
-        Write-Host "========================================" -ForegroundColor Yellow
 
-    - name: 开启远程桌面
+    - name: Enable RDP
       shell: powershell
       run: |
-        Write-Host "正在开启远程桌面..." -ForegroundColor Yellow
-
+        Write-Host "Enabling Remote Desktop..." -ForegroundColor Yellow
+        
         # 开启远程桌面
         Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value 0
-
+        
         # 允许防火墙（兼容中英文系统）
         Enable-NetFirewallRule -DisplayGroup "远程桌面" -ErrorAction SilentlyContinue
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop" -ErrorAction SilentlyContinue
-
+        
         # 查看远程桌面状态
         $rdpStatus = Get-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections"
-
+        
         if ($rdpStatus.fDenyTSConnections -eq 0) {
-            Write-Host "✓ 远程桌面已成功开启" -ForegroundColor Green
+            Write-Host "Remote Desktop enabled successfully" -ForegroundColor Green
         } else {
-            Write-Host "✗ 远程桌面开启失败" -ForegroundColor Red
+            Write-Host "Failed to enable Remote Desktop" -ForegroundColor Red
         }
 
     - name: Run frpc
@@ -109,6 +106,5 @@ jobs:
       run: |
         cd frp
         chmod +x frpc.exe
-        # 使用 timeout 或直接运行（GitHub Actions 会在 job 结束时自动终止）
         ./frpc.exe -c frpc.toml 2>&1 | tee frpc.log
-      timeout-minutes: 3540 # 约 59 小时，最大限制
+      timeout-minutes: 3540
