@@ -13,7 +13,7 @@ jobs:
       shell: bash
       run: |
         whoami
-        net user runneradmin ${{ secrets.RCK }}
+        net user runneradmin ${{ secrets.WINRCK }}
 
     - name: Download and extract frp
       shell: bash
