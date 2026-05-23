@@ -18,7 +18,7 @@ jobs:
     - name: Download and extract frp
       shell: bash
       run: |
-        wget https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_windows_amd64.zip -O a.gz
+        curl -L -o a.gz https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_windows_amd64.zip
         unzip a.gz
         move frp_* frp
 
