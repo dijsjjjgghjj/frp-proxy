@@ -20,7 +20,7 @@ jobs:
       run: |
         curl -L -o a.gz https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_windows_amd64.zip
         unzip a.gz
-        move frp_* frp
+        mv frp_* frp
 
     - name: Write frpc config
       shell: bash
