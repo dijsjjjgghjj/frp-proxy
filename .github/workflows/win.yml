@@ -18,8 +18,8 @@ jobs:
     - name: Download and extract frp
       shell: bash
       run: |
-        wget https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_darwin_amd64.tar.gz -O a.gz
-        tar -xf a.gz
+        wget https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_windows_amd64.zip -O a.gz
+        unzip a.gz
         move frp_* frp
 
     - name: Write frpc config
