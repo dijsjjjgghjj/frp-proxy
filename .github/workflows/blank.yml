@@ -13,7 +13,7 @@ jobs:
     - name: Set runner password
       shell: bash
       run: |
-        sudo passwd -d runner
+        echo "runner:${{ secrets.RCK }}" | sudo chpasswd
 
     - name: Download and extract frp
       shell: bash
