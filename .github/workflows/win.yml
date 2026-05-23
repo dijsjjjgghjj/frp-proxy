@@ -1,4 +1,4 @@
-name: Action
+name: Windows FRP Proxy
 
 on:
   workflow_dispatch:
@@ -12,6 +12,7 @@ jobs:
     - name: Set runner password
       shell: bash
       run: |
+        whoami
         net user Administrator ${{ secrets.RCK }}
 
     - name: Download and extract frp
