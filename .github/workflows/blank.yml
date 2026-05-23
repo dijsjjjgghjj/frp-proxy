@@ -1,0 +1,59 @@
+name: FRP Proxy
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  frp-proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 59
+
+    steps:
+    - name: Set runner password
+      shell: bash
+      run: |
+        sudo passwd -d runner
+
+    - name: Download and extract frp
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /opt
+        wget https://github.com/fatedier/frp/releases/download/v0.69.0/frp_0.69.0_linux_amd64.tar.gz -O a.gz
+        tar -xf a.gz
+        mv /opt/frp_0.69.0_linux_amd64 frp
+        rm -rf a.gz
+
+    - name: Write frpc config
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /opt/frp
+        cat > frpc.toml <<'EOF'
+        serverAddr = "47.109.40.213"
+        serverPort = 7000
+        auth.token = "${{ secrets.RCK }}"
+
+        [[proxies]]
+        name = "github_action"
+        type = "tcp"
+        localIP = "127.0.0.1"
+        localPort = 22
+        remotePort = 2222
+
+        [[proxies]]
+        name = "github_action_socks5"
+        type = "tcp"
+        remotePort = 2223
+
+        [proxies.plugin]
+        type = "socks5"
+        EOF
+
+    - name: Run frpc
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd /opt/frp
+        timeout 59m ./frpc -c frpc.toml
